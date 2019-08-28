@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t serefz/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run serefz/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t serefz/multi-client ./client
+  - docker build -t serefz/multi-nginx ./nginx
+  - docker build -t serefz/multi-server ./server
+  - docker build -t serefz/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID"  --password-stdin
+  # Take each build image and push them to dockerhub.com
+  - docker push serefz/multi-client
+  - docker push serefz/multi-nginx
+  - docker push serefz/multi-server
+  - docker push serefz/multi-worker
+
